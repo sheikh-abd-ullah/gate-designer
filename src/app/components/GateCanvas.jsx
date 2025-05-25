@@ -19,7 +19,7 @@ export default function GateCanvas({ cap, type, arch, height, width }) {
     const drawGate = () => {
       canvas.clear();
 
-      const startX = 100;
+      const startX = 170;
       const startY = 300;
       const totalWidth = width;
       const totalHeight = height;

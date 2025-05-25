@@ -31,9 +31,15 @@ export default function HomePage() {
     <main className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Gate Designer</h1>
 
-      <GateCanvas cap={cap} type={type} arch={arch} height={height} width={width} />
+      <GateCanvas
+        cap={cap}
+        type={type}
+        arch={arch}
+        height={height}
+        width={width}
+      />
 
-      <div className="mt-8 w-full bg-white p-6 rounded shadow flex justify-between">
+      <div className="mt-8 w-full bg-white p-6 rounded shadow lg:flex lg:justify-between">
         <div>
           <label className="block font-semibold mb-1">Gate Type</label>
           <select
@@ -46,7 +52,7 @@ export default function HomePage() {
           </select>
         </div>
 
-        <div>
+        <div className="md:mt-4 sm:mt-4 lg:mt-0">
           <label className="block font-semibold mb-1">Arch Style</label>
           <select
             value={arch}
@@ -59,7 +65,7 @@ export default function HomePage() {
           </select>
         </div>
 
-        <div className="relative w-32">
+        <div className="relative lg:w-32 md:mt-4 sm:mt-4 lg:mt-0">
           <label className="block font-semibold mb-1">Cap Style</label>
           <div
             className="border rounded px-3 py-2 bg-white cursor-pointer flex items-center justify-between"
@@ -96,24 +102,26 @@ export default function HomePage() {
           )}
         </div>
 
-        <div>
-          <label className="block font-semibold mb-1">Height</label>
-          <input
-            type="number"
-            value={height}
-            onChange={(e) => setHeight(parseInt(e.target.value))}
-            className="w-20 border rounded px-3 py-2"
-          />
-        </div>
+        <div className="md:flex sm:flex gap-10 md:mt-4 sm:mt-4 lg:mt-0">
+          <div>
+            <label className="block font-semibold mb-1">Height</label>
+            <input
+              type="number"
+              value={height}
+              onChange={(e) => setHeight(parseInt(e.target.value))}
+              className="lg:w-20 border rounded px-3 py-2"
+            />
+          </div>
 
-        <div>
-          <label className="block font-semibold mb-1">Width</label>
-          <input
-            type="number"
-            value={width}
-            onChange={(e) => setWidth(parseInt(e.target.value))}
-            className="w-20 border rounded px-3 py-2"
-          />
+          <div>
+            <label className="block font-semibold mb-1">Width</label>
+            <input
+              type="number"
+              value={width}
+              onChange={(e) => setWidth(parseInt(e.target.value))}
+              className="lg:w-20 border rounded px-3 py-2"
+            />
+          </div>
         </div>
       </div>
     </main>
