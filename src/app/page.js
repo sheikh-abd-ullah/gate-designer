@@ -11,8 +11,9 @@ import Image from "next/image";
 export default function HomePage() {
   const [type, setType] = useState("single");
   const [arch, setArch] = useState("upperCurved");
-  const [height, setHeight] = useState(100);
-  const [width, setWidth] = useState(200);
+  const [heightFeet, setHeightFeet] = useState(10); // 10 feet
+  const [widthFeet, setWidthFeet] = useState(20); // 20 feet
+
   const [open, setOpen] = useState(false);
 
   const [cap, setCap] = useState({
@@ -27,6 +28,8 @@ export default function HomePage() {
     { label: "Wing", value: "wing", image: wing.src },
   ];
 
+  const scale = 10; // 1 foot = 10 pixels
+
   return (
     <main className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Gate Designer</h1>
@@ -35,8 +38,8 @@ export default function HomePage() {
         cap={cap}
         type={type}
         arch={arch}
-        height={height}
-        width={width}
+        height={heightFeet * scale}
+        width={widthFeet * scale}
       />
 
       <div className="mt-8 w-full bg-white p-6 rounded shadow lg:flex lg:justify-between">
@@ -107,9 +110,10 @@ export default function HomePage() {
             <label className="block font-semibold mb-1">Height</label>
             <input
               type="number"
-              value={height}
-              onChange={(e) => setHeight(parseInt(e.target.value))}
+              value={heightFeet}
+              onChange={(e) => setHeightFeet(e.target.value)}
               className="lg:w-20 border rounded px-3 py-2"
+              min={1}
             />
           </div>
 
@@ -117,9 +121,10 @@ export default function HomePage() {
             <label className="block font-semibold mb-1">Width</label>
             <input
               type="number"
-              value={width}
-              onChange={(e) => setWidth(parseInt(e.target.value))}
+              value={widthFeet}
+              onChange={(e) => setWidthFeet(e.target.value)}
               className="lg:w-20 border rounded px-3 py-2"
+              min={1}
             />
           </div>
         </div>

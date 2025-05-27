@@ -1,8 +1,6 @@
-// In this Component, We created canvas where design can be seen and gate can be designed
-
 "use client";
 import React, { useEffect, useRef } from "react";
-import { Canvas, FabricImage, Line } from "fabric";
+import { Canvas, FabricImage, FabricText, Line } from "fabric";
 
 export default function GateCanvas({ cap, type, arch, height, width }) {
   const canvasRef = useRef(null);
@@ -16,102 +14,141 @@ export default function GateCanvas({ cap, type, arch, height, width }) {
       backgroundColor: "white",
     });
 
-    const drawGate = () => {
+    // let zoom = 1;
+
+    // canvas.on("mouse:wheel", (opt) => {
+    //   const delta = opt.e.deltaY;
+    //   zoom *= delta > 0 ? 0.9 : 1.1;
+    //   zoom = Math.max(0.5, Math.min(zoom, 3)); // limits: min 0.5x, max 3x
+    //   canvas.setZoom(zoom);
+    //   opt.e.preventDefault();
+    //   opt.e.stopPropagation();
+    // });
+
+    const drawGate = async () => {
       canvas.clear();
 
-      const startX = 170;
-      const startY = 300;
+      const scale = 10;
       const totalWidth = width;
       const totalHeight = height;
 
+      const startX = 170;
+      const startY = 300;
+
+      // Horizontal ruler
+      for (let i = 0; i <= (totalWidth/scale)+1; i += 2) {
+        const x = startX + i * scale;
+        canvas.add(
+          new Line([x, startY + 5, x, startY + 10], {
+            stroke: "black",
+            strokeWidth: 1,
+            selectable: false,
+          })
+        );
+        const text = new FabricText(`${i}ft`, {
+          left: x - 6,
+          top: startY + 12,
+          fontSize: 10,
+          fill: "black",
+          selectable: false,
+        });
+        canvas.add(text);
+      }
+
+      // Vertical ruler
+      for (let i = 0; i <= (totalHeight/scale)+1; i += 2) {
+        const y = startY - i * scale;
+        canvas.add(
+          new Line([startX - 10, y, startX - 5, y], {
+            stroke: "black",
+            strokeWidth: 1,
+            selectable: false,
+          })
+        );
+        const text = new FabricText(`${i}ft`, {
+          left: startX - 35,
+          top: y - 6,
+          fontSize: 10,
+          fill: "black",
+          selectable: false,
+        });
+        canvas.add(text);
+      }
+
       const doorGap = type === "double" ? 10 : 0;
-      const doorWidth =
-        type === "double" ? (totalWidth - doorGap) / 2 : totalWidth;
+      const doorWidth = type === "double" ? totalWidth - doorGap : totalWidth;
 
-      const drawDoor = (offsetX) => {
-        const barsPerDoor = 11;
-        const spacing = doorWidth / (barsPerDoor - 1);
+      const drawBars = async (offsetX, totalWidth) => {
+        let barsCount = Math.max(5, Math.floor(totalWidth / 10) + 4);
+        if (barsCount % 2 === 0) barsCount += 1;
+
+        const spacing = totalWidth / (barsCount - 1);
         const groupItems = [];
+        const midIndex = Math.floor(barsCount / 2);
 
-        if (arch === "pointed") {
-          for (let i = 0; i < barsPerDoor; i++) {
-            const x = offsetX + i * spacing;
-            const line = new Line(
-              [
-                x,
-                startY,
-                x,
-                startY - ((i + 1) % 2 === 0 ? totalHeight / 1.2 : totalHeight),
-              ],
-              {
-                stroke: "black",
-                strokeWidth: 2,
-              }
-            );
-            groupItems.push(line);
+        const loadCapImage = async (left, top) => {
+          return new Promise((resolve) => {
+            FabricImage.fromURL(cap.image, {
+              crossOrigin: "anonymous",
+            }).then((img) => {
+              img.scaleToWidth(10);
+              img.scaleToHeight(10);
+              img.set({
+                left,
+                top,
+                selectable: false,
+              });
+              resolve(img);
+            });
+          });
+        };
+
+        for (let i = 0; i < barsCount; i++) {
+          const x = offsetX + i * spacing;
+
+          let barHeight = totalHeight;
+
+          const isFirstOrLast = i === 0 || i === barsCount - 1;
+
+          if (!isFirstOrLast) {
+            if (arch === "pointed") {
+              barHeight = i % 2 === 0 ? totalHeight / 1.2 : totalHeight;
+            } else if (arch === "upperCurved") {
+              const distance = Math.abs(i - midIndex);
+              barHeight =
+                totalHeight + ((midIndex - distance) * totalHeight) / barsCount;
+            } else if (arch === "lowerCurved") {
+              const distance = Math.abs(i - midIndex);
+              barHeight =
+                totalHeight - ((midIndex - distance) * totalHeight) / barsCount;
+            }
           }
-        } else if (arch === "upperCurved") {
-          for (let i = 0; i < barsPerDoor; i++) {
-            const x = offsetX + i * spacing;
-            const line = new Line(
-              [
-                x,
-                startY,
-                x,
-                startY -
-                  (i < 5
-                    ? totalHeight + (i * totalHeight) / 10
-                    : i > 5
-                    ? totalHeight + ((barsPerDoor - (i + 1)) * totalHeight) / 10
-                    : totalHeight + (4 * totalHeight) / 10),
-              ],
-              {
-                stroke: "black",
-                strokeWidth: 2,
-              }
-            );
-            groupItems.push(line);
-          }
-        } else if (arch === "lowerCurved") {
-          for (let i = 0; i < barsPerDoor; i++) {
-            const x = offsetX + i * spacing;
-            const line = new Line(
-              [
-                x,
-                startY,
-                x,
-                startY -
-                  (i < 5
-                    ? ((barsPerDoor - (i + 1)) * totalHeight) / 10
-                    : i > 5
-                    ? (i * totalHeight) / 10
-                    : (4 * totalHeight) / 10),
-              ],
-              {
-                stroke: "black",
-                strokeWidth: 2,
-              }
-            );
-            groupItems.push(line);
-          }
+
+          const bar = new Line([x, startY, x, startY - barHeight], {
+            stroke: "black",
+            strokeWidth: 1,
+            selectable: false,
+          });
+
+          groupItems.push(bar);
+
+          const capImg = await loadCapImage(x - 2, startY - barHeight - 10);
+          groupItems.push(capImg);
         }
+        
 
         return groupItems;
       };
 
-      const leftDoor = drawDoor(startX);
-      leftDoor.forEach((obj) => canvas.add(obj));
+      const bars = await drawBars(startX, doorWidth);
+      bars.forEach((obj) => canvas.add(obj));
 
-      if (type === "double") {
-        const rightStart = startX + doorWidth + doorGap;
-        const rightDoor = drawDoor(rightStart);
-        rightDoor.forEach((obj) => canvas.add(obj));
-      }
-
+      // Vertical main posts
       canvas.add(
         new Line([startX - 5, startY, startX - 5, startY - totalHeight], {
           stroke: "black",
           strokeWidth: 4,
+          selectable: false,
         })
       );
       canvas.add(
@@ -122,67 +159,44 @@ export default function GateCanvas({ cap, type, arch, height, width }) {
             startX + totalWidth + 5,
             startY - totalHeight,
           ],
-          { stroke: "black", strokeWidth: 4 }
+          { stroke: "black", strokeWidth: 4, selectable: false }
         )
       );
 
-      canvas.add(
-        new Line([startX, startY, startX + totalWidth, startY], {
-          stroke: "black",
-          strokeWidth: 3,
-        })
-      );
-      //   canvas.add(
-      //     new Line(
-      //       [
-      //         startX,
-      //         startY - totalHeight,
-      //         startX + totalWidth,
-      //         startY - totalHeight,
-      //       ],
-      //       {
-      //         stroke: "black",
-      //         strokeWidth: 3,
-      //       }
-      //     )
-      //   );
-
+      // Horizontal detail lines
       const mid1 = startY - totalHeight / 5;
-      const mid2 = startY - totalHeight / 7;
+      const last = startY;
 
       if (type === "double") {
-        const doorWidth = (totalWidth - doorGap) / 2;
+        const leftEnd = startX + doorWidth / 2;
+        const rightStart = startX + doorWidth / 2 + doorGap;
 
+        // Mid rails
         canvas.add(
-          new Line([startX, mid1, startX + doorWidth, mid1], {
+          new Line([startX, mid1, leftEnd, mid1], {
             stroke: "gray",
             strokeWidth: 1.5,
           })
         );
         canvas.add(
-          new Line(
-            [startX + doorWidth + doorGap, mid1, startX + totalWidth, mid1],
-            {
-              stroke: "gray",
-              strokeWidth: 1.5,
-            }
-          )
+          new Line([rightStart, mid1, startX + doorWidth, mid1], {
+            stroke: "gray",
+            strokeWidth: 1.5,
+          })
         );
 
+        // Bottom rails
         canvas.add(
-          new Line([startX, mid2, startX + doorWidth, mid2], {
+          new Line([startX, last, leftEnd, last], {
             stroke: "gray",
             strokeWidth: 1.5,
           })
         );
         canvas.add(
-          new Line(
-            [startX + doorWidth + doorGap, mid2, startX + totalWidth, mid2],
-            {
-              stroke: "gray",
-              strokeWidth: 1.5,
-            }
-          )
+          new Line([rightStart, last, startX + doorWidth, last], {
+            stroke: "gray",
+            strokeWidth: 1.5,
+          })
         );
       } else {
         canvas.add(
@@ -192,15 +206,16 @@ export default function GateCanvas({ cap, type, arch, height, width }) {
           })
         );
         canvas.add(
-          new Line([startX, mid2, startX + totalWidth, mid2], {
+          new Line([startX, last, startX + totalWidth, last], {
             stroke: "gray",
             strokeWidth: 1.5,
           })
         );
       }
 
+      // Add top cap images
       FabricImage.fromURL(cap.image, {
-        crossOrigin: "anonymous", // allow external images if needed
+        crossOrigin: "anonymous",
       }).then((img) => {
         img.scaleToWidth(10);
         img.scaleToHeight(10);
@@ -209,12 +224,11 @@ export default function GateCanvas({ cap, type, arch, height, width }) {
           top: startY - totalHeight - 10,
           selectable: false,
         });
-
         canvas.add(img);
       });
 
       FabricImage.fromURL(cap.image, {
-        crossOrigin: "anonymous", // allow external images if needed
+        crossOrigin: "anonymous",
       }).then((img) => {
         img.scaleToWidth(10);
         img.scaleToHeight(10);
@@ -223,10 +237,46 @@ export default function GateCanvas({ cap, type, arch, height, width }) {
           top: startY - totalHeight - 10,
           selectable: false,
         });
-
         canvas.add(img);
       });
+
+      // Auto-zoom and center the drawing
+      const drawingBounds = canvas.getObjects().reduce(
+        (bounds, obj) => {
+          const objBounds = obj.getBoundingRect();
+          bounds.left = Math.min(bounds.left, objBounds.left);
+          bounds.top = Math.min(bounds.top, objBounds.top);
+          bounds.right = Math.max(
+            bounds.right,
+            objBounds.left + objBounds.width
+          );
+          bounds.bottom = Math.max(
+            bounds.bottom,
+            objBounds.top + objBounds.height
+          );
+          return bounds;
+        },
+        { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
+      );
+
+      const drawingWidth = drawingBounds.right - drawingBounds.left;
+      const drawingHeight = drawingBounds.bottom - drawingBounds.top;
+
+      const scaleX = canvas.getWidth() / (drawingWidth + 40);
+      const scaleY = canvas.getHeight() / (drawingHeight + 40);
+      const finalZoom = Math.min(scaleX, scaleY);
+
+      canvas.setZoom(finalZoom);
+      canvas.viewportTransform[4] =
+        (canvas.getWidth() - drawingWidth * finalZoom) / 2 -
+        drawingBounds.left * finalZoom;
+      canvas.viewportTransform[5] =
+        (canvas.getHeight() - drawingHeight * finalZoom) / 2 -
+        drawingBounds.top * finalZoom;
+
+      canvas.renderAll();
     };
+
 
     drawGate();
 
